@@ -1,0 +1,31 @@
+{
+	"name": "apidogbot",
+	"version": "0.0.1",
+	"main": "src/index.js",
+	"type": "module",
+	"scripts": {
+		"start_js": "tsc && node src/index.js",
+		"prebuild_": "tslint -c tslint.json -p tsconfig.json --fix",
+		"build": "tsc",
+		"prestart": "npm run build",
+		"start": "node ./dist/index"
+	},
+	"dependencies": {
+		"@types/mysql": "2.15.7",
+		"dotenv": "^8.1.0",
+		"mysql": "2.17.1",
+		"node-telegram-bot-api": "0.30.0",
+		"socks5-https-client": "1.2.1",
+		"sugar": "^2.0.6"
+	},
+	"devDependencies": {
+		"@types/dotenv": "^6.1.1",
+		"@types/node-telegram-bot-api": "^0.31.0",
+		"eslint": "6.2.2",
+		"eslint-plugin-import": "2.18.2",
+		"eslint-plugin-node": "9.1.0",
+		"eslint-plugin-promise": "4.2.1",
+		"eslint-plugin-standard": "4.0.1",
+		"typescript": "3.6.2"
+	}
+}
