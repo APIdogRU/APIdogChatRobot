@@ -31,7 +31,7 @@ export default (m: ICheckMessage): IPunishment => {
 	if (count >= USER_FLOOD_MAX_COUNT) {
 		const karma = m.user.karma;
 		return {
-			isStrict: !(karma > 0),
+			isStrict: karma < 0,
 			banDuration: karma > 0
 				? 0
 				: 10 * MINUTE,

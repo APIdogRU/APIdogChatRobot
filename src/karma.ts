@@ -8,6 +8,7 @@ import handleJoke from './jokes';
 import handleRules from './rules';
 import { ICheckMessage, ICoolDownInfo, IKarmaItem, ILocalUser, ITransferKarmaOptions, ITransferKarmaResult, USER_DEV_NULL } from './interfaces';
 import { toStringDateTime } from './time';
+import * as Sugar from 'sugar';
 
 /**
  * Линка на коннект к базе данных
@@ -42,11 +43,11 @@ export const getKarmaValue = async (userId: number) => {
 	}
 };
 
-const makeKarmaTransaction = async (userId: number, delta: number) => {
-	const sql = 'INSERT INTO `tgRating` SET ?';
+export const makeKarmaTransaction = async (userId: number, delta: number) => {
+	const sql = 'INS' + 'ERT INTO `tgRating` SET ?';
 
 	const commit = async () => new Promise<void>(resolve => {
-		database.query(sql, { userId, delta, date: getNow() }, (error: mysql.MysqlError, results: {insertId: number}) => {
+		database.query(sql, { userId, delta, date: getNow() }, (error: mysql.MysqlError, _results: void) => {
 			if (error) throw error;
 			resolve();
 		});
@@ -221,7 +222,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 	// Кэш всех юзеров
 	fetchAllData(database);
 
-	bot.on('message', async (message: TelegramBot.Message, metadata: TelegramBot.Metadata) => {
+	bot.on('message', async (message: TelegramBot.Message) => {
 
 		// Инфа о юзере
 		const user: ILocalUser = await getUserData(message.from.id);
@@ -235,7 +236,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		// Отправлятор
 		const sender = () => reply(bot, message);
 
-		handleRules(checkBundle, sender);
+		await handleRules(checkBundle, sender);
 
 		const isCommand = message.entities && message.entities.length && message.entities[0].type === 'bot_command';
 
@@ -244,7 +245,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		}
 	});
 
-	bot.onText(/\/FF (-?\d+)/i, async (message: TelegramBot.Message, match: string[]) => {
+	bot.onText(/\/F (-?\d+)/i, async (message: TelegramBot.Message, match: string[]) => {
 		const rpl = reply(bot, message).asReply();
 		try {
 			const fromUser = message.from;

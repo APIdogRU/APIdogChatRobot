@@ -2,9 +2,10 @@ import TelegramBot from 'node-telegram-bot-api';
 import mysql from 'mysql';
 import reply, { Reply } from './reply';
 import config from './config'
-import { DAY, packAction, unpackAction } from './utils';
+import { DAY, getNow, packAction, unpackAction } from './utils';
 import InlineKeyboard from './keyboards';
-import { parseTimeInterval } from './time';
+import { parseTimeInterval, toStringDateTime } from './time';
+import { query } from './db';
 
 let database: mysql.Connection;
 
@@ -17,6 +18,9 @@ interface IVoteBanItem {
 	answer: VoteBanAnswer;
 }
 
+const VOTE_MIN_COUNT = 3;
+const ACTION_VB = 'voteban';
+
 /**
  * Блокировка пользователей
  *
@@ -28,42 +32,9 @@ interface IVoteBanItem {
  *     N может быть не менее 30 секунд и не более одного дня
  */
 
-const wrapQuery = async <T>(database: mysql.Connection, sql: string, args?: (string | number)[]) => new Promise<T>((resolve, reject) => {
-	database.query(sql, args, (error: mysql.MysqlError, results: T) => {
-		if (error) {
-			reject(error);
-		}
-		resolve(results);
-	});
-});
-
-class BanUser {
-	private userId: number;
-	private duration?: number;
-	private delta?: number;
-
-	constructor(userId: number) {
-		this.userId = userId;
-	}
-
-	public setDuration(duration: number): void {
-		this.duration = this.checkDuration(duration);
-	}
-
-	private checkDuration(duration: number): number {
-		if (duration < 30 || duration > DAY) {
-			throw new Error('Длительность блокировки должна быть не менее 30 секунд и не более дня.');
-		}
-		return duration;
-	}
-
-	public setDelta(delta: number): void {
-		this.delta = delta;
-	}
-}
 
 const getVoteBanData = async (messageId: number) => {
-	const items = await wrapQuery<IVoteBanItem[]>(database, 'select * from `tgVoteban` where `messageId` = ?', [messageId]);
+	const items = await query<IVoteBanItem>(database, 'select * from `tgVoteban` where `messageId` = ?', [messageId]);
 
 	let yes = 0, no = 0;
 
@@ -72,10 +43,8 @@ const getVoteBanData = async (messageId: number) => {
 	return {yes, no};
 };
 
-
-
 const addVoteBanAnswer = async (messageId: number, voterId: number, answer: VoteBanAnswer) => {
-	const result = await wrapQuery<void>(
+	await query<void>(
 		database,
 		'insert into `tgVoteban` (`messageId`, `voterUserId`, `answer`) VALUES (?, ?, ?)',
 		[messageId, voterId, answer]
@@ -84,36 +53,58 @@ const addVoteBanAnswer = async (messageId: number, voterId: number, answer: Vote
 	return getVoteBanData(messageId);
 };
 
-const packVoteBan = (m: TelegramBot.Message, yes: boolean) => packAction(ACTION_VB, [
+const packVoteBan = (m: TelegramBot.Message, duration: number, yes: VoteBanAnswer) => packAction(ACTION_VB, [
 	m.message_id,
 	m.from.id,
-	+yes
+	duration,
+	yes
 ]);
 
-const createKeyboardVoteBan = (target: TelegramBot.Message, yes: number, no: number) => {
+const createKeyboardVoteBan = (target: TelegramBot.Message, duration: number, yes: number, no: number) => {
 	const kb: InlineKeyboard = new InlineKeyboard();
 	const kbRow = kb.addRow();
-	kbRow.addStringButton(`Да [${yes}]`, packVoteBan(target, true));
-	kbRow.addStringButton(`Нет [${no}]`, packVoteBan(target, false));
+	kbRow.addStringButton(`Да [ ${yes} ]`, packVoteBan(target, duration, 1));
+	kbRow.addStringButton(`Нет [ ${no} ]`, packVoteBan(target, duration, 0));
 	return kb.make();
 };
 
-const ACTION_VB = 'voteban';
+const summarize = (bot: TelegramBot, badMessage: TelegramBot.Message, botMessage: TelegramBot.Message, banDuration: number) => {
+	const { from: badUser, chat: targetChat } = badMessage;
+	bot.deleteMessage(targetChat.id, String(botMessage.message_id));
+
+	let text;
+
+	if (banDuration) {
+		bot.restrictChatMember(targetChat.id, String(badUser.id), {
+			can_send_messages: false,
+			until_date: getNow() + banDuration
+		});
+
+		text = `👍🏻 ${badUser.username} заблокирован на ${toStringDateTime(banDuration)}`;
+	} else {
+		text = `❌ ${badUser.username} не заблокирован`;
+	}
+
+	reply(bot, badMessage).text(text).asReply().send();
+};
+
+const voterRow = (answer: VoteBanAnswer, user: TelegramBot.User) => `${answer ? '➕' : '➖'} ${user.username || user.first_name}`;
+
 
 export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 	database = argDatabase;
 
-	bot.onText(/\/voteban2( ([\ddhms]+))?/, async (message: TelegramBot.Message, match: string[]) => {
+	bot.onText(/\/voteban( ([\ddhms]+))?/, async (message: TelegramBot.Message, match: string[]) => {
 		// Сообщение того, кого баним
 		const target: TelegramBot.Message = message.reply_to_message;
 
 		// Кто банит
-		const suitor: TelegramBot.User = message.from;
+		//const suitor: TelegramBot.User = message.from;
 
 		// Ответ на сообщение, автора которого баним
 		const rpl = reply(bot, message).asReply(target.message_id);
 
-		const msg = async (): Promise<Reply> => {
+		const makeReply = async (): Promise<Reply> => {
 			if (!target) {
 				throw new Error('Не выбрано сообщение');
 			}
@@ -143,12 +134,12 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 
 			const res = await addVoteBanAnswer(target.message_id, message.from.id, +1);
 
-			return rpl.text(`Охуел ли в конец ${enemy.first_name} ${enemy.last_name} (@${enemy.username})?`)
+			return rpl.text(`Охуел ли в конец ${enemy.first_name} ${enemy.last_name || ''} (${enemy.username ? '@' + enemy.username : 'no username'})?\n${voterRow(1, message.from)}`)
 				.setReplyTarget(target)
-				.replyMarkup(createKeyboardVoteBan(target, res.yes, res.no));
+				.replyMarkup(createKeyboardVoteBan(target, duration, res.yes, res.no));
 		};
 		try {
-			(await msg()).send();
+			(await makeReply()).send();
 		} catch (e) {
 			console.error(e);
 			rpl.text(`❌ Ошибка!\n\n${e.message}`).send();
@@ -165,12 +156,12 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		// Кто нажал
 		const user: TelegramBot.User = query.from;
 
-		const [messageId, enemyId, answer ] = args;
+		const [answer, duration] = args;
 
 		const messageVote = query.message; // Сообщение бота
 		const targetMessage = messageVote.reply_to_message; // Сообщение за которое бан
 
-		console.log(`User ${user.username}/${user.id} clicked button ${answer} on voteban for ${targetMessage.from.username}/${targetMessage.from.id}`);
+		console.log(`User ${user.username}/${user.id} clicked button ${answer} on voteban for ${targetMessage.from && targetMessage.from.username}/${targetMessage.from && targetMessage.from.id}`);
 		console.log(messageVote.message_id, user.id, answer === '1');
 
 		if (user.id === targetMessage.from.id) {
@@ -181,9 +172,24 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 
 		try {
 			const ans = +(answer === '1') as VoteBanAnswer;
-			const res = await addVoteBanAnswer(messageVote.message_id, user.id, ans);
+			const res = await addVoteBanAnswer(targetMessage.message_id, user.id, ans);
 
-			await bot.editMessageReplyMarkup(createKeyboardVoteBan(targetMessage, res.yes, res.no), {
+			if (res.yes >= VOTE_MIN_COUNT || res.no >= VOTE_MIN_COUNT) {
+				summarize(
+					bot,
+					targetMessage,
+					messageVote,
+					res.yes > res.no
+						? +duration
+						: 0
+				);
+				return;
+			}
+
+			const text = messageVote.text + `\n${voterRow(ans, user)}`;
+
+			await bot.editMessageText(text, {
+				reply_markup: createKeyboardVoteBan(targetMessage, +duration, res.yes, res.no),
 				chat_id: messageVote.chat.id,
 				message_id: messageVote.message_id
 			});

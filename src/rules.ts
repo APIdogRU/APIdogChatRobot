@@ -3,6 +3,8 @@ import checkFlood from './flood';
 import config from './config';
 import { MINUTE } from './utils';
 import { Reply } from './reply';
+import { makeKarmaTransaction } from './karma';
+import { toStringDateTime } from './time';
 
 /******************************************************
  * Проверка сообщения, наказание и отправка сообщения *
@@ -13,7 +15,7 @@ import { Reply } from './reply';
  * @param m Бандл сообщения
  */
 const defaultPunishment = (m: ICheckMessage): IPunishment => ({
-	isStrict: !(m.user.karma > 0),
+	isStrict: m.user.karma < 0,
 	banDuration: m.user.karma > 0
 		? 5 * MINUTE
 		: Math.abs(m.user.karma),
@@ -54,24 +56,52 @@ const rules: Record<string, IRule> = {
 		deltaKarma: 100,
 		action: (bot) => bot.deleteMessage(m.message.chat.id, String(m.message.message_id))
 	}
-
 };
 
-export default (checkBundle: ICheckMessage, reply: () => Reply) => {
+const names: Record<string, string> = {
+	'check-flood': 'Флуд',
+	'trigger-test': 'Тест',
+	'trigger-navalny': 'Навальный',
+	'trigger-putin': 'Путин',
+	'trigger-good_luck': 'Бояны',
+	'trigger-no_comments': 'Запрещёнка',
+	'trigger-vladik': 'Запрещёнка',
+	'trigger-anime': 'Аниме',
+	'trigger-stickerpack-bad': 'Стикерпак',
+	'trigger-sticker-bad': 'Стикер',
+	'trigger-sticker-animated': 'Анимированный стикер'
+};
+
+export default async (checkBundle: ICheckMessage, reply: () => Reply) => {
 	Object.keys(rules).some(key => {
-		process.stdout.write(`check for [${key}] ...\r`);
 		const test: IPunishment | null = rules[key](checkBundle);
-		process.stdout.write(`check for [${key}] - ${test}\n`);
+
 		if (test) {
-			let str = ['Triggered'];
+			process.stdout.write(`triggered by check [${key}] ${test}\n`);
 
-			str.push(`name trigger = ${key}`);
-			str.push(`is strict = ${test.isStrict}`);
-			str.push(`delta karma = ${test.deltaKarma}`);
-			str.push(`ban duration = ${test.banDuration}`);
-			str.push(`action? = ${test.action ? test.action.toString() : null}`);
+			(async () => {
+				const { message } = checkBundle;
+				const { from } = message;
 
-			reply().text(str.join('\n')).send();
+				//const karma = checkBundle.user.karma;
+
+				const needBlock = test.isStrict;
+
+				const replyMessage: string[] = [];
+
+				replyMessage.push(`❗️ ${from.username || from.first_name}`);
+				replyMessage.push(`стриггерил проверку <code>${names[key]}</code>`);
+
+				const [{ karma: karmaNew }] = await makeKarmaTransaction(from.id, test.deltaKarma);
+
+				replyMessage.push(`\n🔴 Карма: <code>${Math.floor(test.deltaKarma)}</code> -> <code>${karmaNew}</code>`);
+
+				if (needBlock) {
+					replyMessage.push(`\n🚫 Блок: на ${toStringDateTime(test.banDuration)}`);
+				}
+
+				reply().text(replyMessage.join(' ')).send();
+			})();
 			return true;
 		}
 	});

@@ -2,8 +2,6 @@
  * Утилиты *
  ***********/
 
-import Sugar from 'sugar';
-
 /**
  * Текущее время в unixtime (seconds)
  */
@@ -20,7 +18,6 @@ export const getRandomInt = (max: number) => {
 export const MINUTE = 60;
 export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
-export const WEEK = 7 * DAY;
 
 /**
  * Запаковка callback_data в строку (до 64 байт!)
@@ -39,5 +36,3 @@ export const unpackAction = (packed: string) => {
 	const args = packed.split('/');
 	return { action: args.shift(), args: args };
 };
-
-export const sanitize = (str: string) => Sugar.String.escapeHTML(str);
