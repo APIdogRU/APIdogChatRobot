@@ -26,7 +26,7 @@ const parseTimeInterval = (str: string) => {
 
 const toStringDateTime = (seconds: number): string => {
 	if (seconds < MINUTE) {
-		return `seconds с.`;
+		return `${seconds} с.`;
 	}
 
 	const i = Math.floor;
