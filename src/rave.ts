@@ -90,7 +90,7 @@ export default function(bot: TelegramBot) {
 	/**
 	 * Request rave
 	 */
-	bot.onText(/\/rave2/, (message) => {
+	bot.onText(/\/rave/, (message) => {
 		let text = getPhrase();
 
 		if (!text) {
