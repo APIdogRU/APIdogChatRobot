@@ -1,4 +1,4 @@
-import { getNow, MINUTE } from './utils';
+import { MINUTE } from './utils';
 import { ICheckMessage, IPunishment } from './interfaces';
 
 /******************
@@ -15,7 +15,7 @@ export default (m: ICheckMessage): IPunishment => {
 		history[userId] = [];
 	}
 
-	const now: number = getNow();
+	const now: number = m.message.date;
 
 	history[userId].unshift(now);
 
