@@ -36,3 +36,9 @@ export const unpackAction = (packed: string) => {
 	const args = packed.split('/');
 	return { action: args.shift(), args: args };
 };
+
+/**
+ * Человеческий вывод дельты кармы
+ * @param value Карма
+ */
+export const formatKarma = (value: number) => (value > 0 ? '+' : '-') + Math.abs(value);

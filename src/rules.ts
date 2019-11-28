@@ -1,7 +1,7 @@
 import { AnimatedSticker, ICheckMessage, IPunishment, IRule } from './interfaces';
 import checkFlood from './flood';
 import config from './config';
-import { MINUTE } from './utils';
+import { formatKarma, MINUTE } from './utils';
 import { Reply } from './reply';
 import { makeKarmaTransaction } from './karma';
 import { toStringDateTime } from './time';
@@ -94,7 +94,7 @@ export default async (checkBundle: ICheckMessage, reply: () => Reply) => {
 
 				const [{ karma: karmaNew }] = await makeKarmaTransaction(from.id, test.deltaKarma);
 
-				replyMessage.push(`\n🔴 Карма: <code>${Math.floor(test.deltaKarma)}</code> -> <code>${karmaNew}</code>`);
+				replyMessage.push(`\n🔴 Карма: <code>${formatKarma(Math.floor(test.deltaKarma))}</code> -> <code>${karmaNew}</code>`);
 
 				if (needBlock) {
 					replyMessage.push(`\n🚫 Блок: на ${toStringDateTime(test.banDuration)}`);

@@ -1,5 +1,5 @@
 import * as TelegramBot from 'node-telegram-bot-api';
-import { DAY, getNow, getRandomInt, HOUR } from './utils';
+import { DAY, formatKarma, getNow, getRandomInt, HOUR } from './utils';
 import { Reply } from './reply';
 import { IReasonJoke } from './interfaces';
 import { makeKarmaTransaction } from './karma';
@@ -49,7 +49,7 @@ export default (message: TelegramBot.Message, reply: () => Reply) => {
 		const delta = Sugar.Object.isFunction(joke.delta) ? joke.delta() : joke.delta;
 		const [{ karma: karmaNew }] = await makeKarmaTransaction(message.from.id, delta);
 
-		reply().text(`<b>👤 ${user.username || user.first_name}</b>\n🔺 Карма: <code>+${delta}</code> -> <code>${karmaNew}</code>\n▫️ Кулдаун: ${toStringDateTime(coolDown)}`).asReply().send();
+		reply().text(`<b>👤 ${user.username || user.first_name}</b>\n🔺 Карма: <code>${formatKarma(delta)}</code> -> <code>${karmaNew}</code>\n▫️ Кулдаун: ${toStringDateTime(coolDown)}`).asReply().send();
 	};
 
 	jokes.some(joke => {
