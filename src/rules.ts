@@ -5,6 +5,7 @@ import { formatKarma, MINUTE } from './utils';
 import { Reply } from './reply';
 import { makeKarmaTransaction } from './karma';
 import { toStringDateTime } from './time';
+import Sugar from 'sugar'
 
 /******************************************************
  * Проверка сообщения, наказание и отправка сообщения *
@@ -49,12 +50,35 @@ const rules: Record<string, IRule> = {
 	'trigger-vladik': m => checkTrigger(m, /([вb]л[аa@]ди[кk]|vl[aа@]di[cс][kк])/igm),
 	'trigger-anime': m => checkTrigger(m, /[аa@оo][нnh][иieе][мm][еeэ]/igm),
 
-	'trigger-stickerpack-bad': m => m.message.sticker && config.restricts.stickerSets.indexOf(m.message.sticker.set_name) >= 0 && defaultPunishment(m),
-	'trigger-sticker-bad': m => m.message.sticker && config.restricts.stickers.indexOf(m.message.sticker.file_id) >= 0 && defaultPunishment(m),
-	'trigger-sticker-animated': m => m.message.sticker && (m.message.sticker as AnimatedSticker).is_animated && {
-		isStrict: false,
-		deltaKarma: 100,
-		action: (bot) => bot.deleteMessage(m.message.chat.id, String(m.message.message_id))
+	'trigger-stickerpack-bad': m => {
+		const sticker = m.message.sticker;
+
+		return sticker && config.restricts.stickerSets.includes(sticker.set_name)
+			? defaultPunishment(m)
+			: null;
+	},
+
+	'trigger-sticker-bad': m => {
+		const sticker = m.message.sticker;
+
+		return sticker && config.restricts.stickers.includes(sticker.file_id)
+			? defaultPunishment(m)
+			: null;
+	},
+
+	'trigger-sticker-animated': m => {
+		const sticker = m.message.sticker as AnimatedSticker;
+
+		if (sticker && sticker.is_animated) {
+			const { message } = m;
+			return {
+				isStrict: false,
+				deltaKarma: -100,
+				action: (bot) => bot.deleteMessage(message.chat.id, String(message.message_id))
+			};
+		}
+
+		return null;
 	}
 };
 
@@ -98,6 +122,10 @@ export default async (checkBundle: ICheckMessage, reply: () => Reply) => {
 
 				if (needBlock) {
 					replyMessage.push(`\n🚫 Блок: на ${toStringDateTime(test.banDuration)}`);
+				}
+
+				if (test.action && Sugar.Object.isFunction(test.action)) {
+					test.action(checkBundle.bot);
 				}
 
 				reply().text(replyMessage.join(' ')).send();

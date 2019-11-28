@@ -228,10 +228,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		const user: ILocalUser = await getUserData(message.from.id);
 
 		// Бандл для проверок
-		const checkBundle: ICheckMessage = {
-			message: message,
-			user: user
-		};
+		const checkBundle: ICheckMessage = { message, user, bot };
 
 		// Отправлятор
 		const sender = () => reply(bot, message);

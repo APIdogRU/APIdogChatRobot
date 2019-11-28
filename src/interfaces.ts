@@ -19,8 +19,9 @@ export interface IPunishment {
 }
 
 export interface ICheckMessage {
-	message: TelegramBot.Message,
-	user: ILocalUser
+	message: TelegramBot.Message;
+	user: ILocalUser;
+	bot: TelegramBot;
 }
 
 export interface ILocalUser {
