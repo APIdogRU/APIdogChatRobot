@@ -29,7 +29,6 @@ const jokes: IJoke[] = [
 const coolDownInfo: Record<string, number> = {};
 
 export default (message: TelegramBot.Message, reply: () => Reply) => {
-
 	const ent = message.entities[0];
 	const substr = message.text.substr(ent.offset, ent.length);
 
