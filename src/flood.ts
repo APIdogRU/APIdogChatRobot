@@ -19,12 +19,12 @@ export default (m: ICheckMessage): IPunishment => {
 
 	history[userId].unshift(now);
 
-	const count = history[userId].reduce(((count: number, item: number) => {
+	const count = history[userId].reduce((count: number, item: number) => {
 		if (now - item < USER_FLOOD_TTL) {
 			++count;
 		}
 		return count;
-	}), 0);
+	}, 0);
 
 	history[userId].length = 5;
 

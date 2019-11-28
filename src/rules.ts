@@ -5,7 +5,7 @@ import { formatKarma, MINUTE } from './utils';
 import { Reply } from './reply';
 import { makeKarmaTransaction } from './karma';
 import { toStringDateTime } from './time';
-import Sugar from 'sugar'
+import Sugar from 'sugar';
 
 /******************************************************
  * Проверка сообщения, наказание и отправка сообщения *
@@ -21,7 +21,7 @@ const defaultPunishment = (m: ICheckMessage): IPunishment => ({
 		? 5 * MINUTE
 		: Math.abs(m.user.karma),
 	deltaKarma: m.user.karma > 0
-		? -Math.max(250, m.user.karma * .2)
+		? -Math.max(250, m.user.karma * 0.2)
 		: -500
 });
 
@@ -96,18 +96,18 @@ const names: Record<string, string> = {
 	'trigger-sticker-animated': 'Анимированный стикер'
 };
 
-export default async (checkBundle: ICheckMessage, reply: () => Reply) => {
+export default async(checkBundle: ICheckMessage, reply: () => Reply) => {
 	Object.keys(rules).some(key => {
 		const test: IPunishment | null = rules[key](checkBundle);
 
 		if (test) {
 			process.stdout.write(`triggered by check [${key}] ${test}\n`);
 
-			(async () => {
+			(async() => {
 				const { message } = checkBundle;
 				const { from } = message;
 
-				//const karma = checkBundle.user.karma;
+				// const karma = checkBundle.user.karma;
 
 				const needBlock = test.isStrict;
 
@@ -133,4 +133,4 @@ export default async (checkBundle: ICheckMessage, reply: () => Reply) => {
 			return true;
 		}
 	});
-}
+};

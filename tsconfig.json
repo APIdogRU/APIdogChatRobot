@@ -5,16 +5,14 @@
 		"target": "es5",
 		"noImplicitAny": true,
 		"moduleResolution": "node",
-		"sourceMap": true,
+		"sourceMap": false,
 		"outDir": "dist",
-		"baseUrl": ".",
-		"paths": {
-			"*": [
-				"node_modules/*"
-			]
-		}
+		"baseUrl": "."
 	},
 	"include": [
 		"src/**/*"
+	],
+	"exclude": [
+		"node_modules/*"
 	]
 }

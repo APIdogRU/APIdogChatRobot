@@ -41,6 +41,7 @@ export type IRule = (m: ICheckMessage) => IPunishment | null | undefined;
  * Ибо в стандартной библиотеке их нет
  */
 export interface AnimatedSticker extends Sticker {
+	// eslint-disable-next-line camelcase
 	is_animated: boolean;
 }
 

@@ -20,7 +20,7 @@ const coolDown: Record<number, ICoolDownInfo> = {};
  * Получить данные о карме всех юзеров
  * @param database
  */
-const fetchAllData = async (database: mysql.Connection): Promise<IKarmaItem[]> => {
+const fetchAllData = async(database: mysql.Connection): Promise<IKarmaItem[]> => {
 	try {
 		const sql = 'SELECT DISTINCT `userId`, `username`, IFNULL(SUM(`delta`), 0) AS `karma` FROM `tgUser` LEFT JOIN `tgRating` ON `tgUser`.`telegramId` = `tgRating`.`userId` GROUP BY `userId` ORDER BY `karma` DESC';
 
@@ -34,7 +34,7 @@ const fetchAllData = async (database: mysql.Connection): Promise<IKarmaItem[]> =
  * Получить карму юзера по его идентификатору
  * @param userId
  */
-export const getKarmaValue = async (userId: number) => {
+export const getKarmaValue = async(userId: number) => {
 	const sql = 'SELECT SUM(`delta`) AS `karma` FROM `tgRating` WHERE `userId` = ?';
 	try {
 		return await query<IKarmaItem>(database, sql, [userId]);
@@ -43,10 +43,10 @@ export const getKarmaValue = async (userId: number) => {
 	}
 };
 
-export const makeKarmaTransaction = async (userId: number, delta: number) => {
+export const makeKarmaTransaction = async(userId: number, delta: number) => {
 	const sql = 'INS' + 'ERT INTO `tgRating` SET ?';
 
-	const commit = async () => new Promise<void>(resolve => {
+	const commit = async() => new Promise<void>(resolve => {
 		database.query(sql, { userId, delta, date: getNow() }, (error: mysql.MysqlError, _results: void) => {
 			if (error) throw error;
 			resolve();
@@ -55,10 +55,10 @@ export const makeKarmaTransaction = async (userId: number, delta: number) => {
 
 	await commit();
 
-	return await getKarmaValue(userId);
+	return getKarmaValue(userId);
 };
 
-export const transferKarma = async (diff: number, from: number, to: number, options?: ITransferKarmaOptions): Promise<ITransferKarmaResult> => {
+export const transferKarma = async(diff: number, from: number, to: number, options?: ITransferKarmaOptions): Promise<ITransferKarmaResult> => {
 	if (!to || to === USER_DEV_NULL) {
 		throw new Error('Чё это за юзер?');
 	}
@@ -82,7 +82,7 @@ export const transferKarma = async (diff: number, from: number, to: number, opti
 	};
 
 	if (from !== USER_DEV_NULL) {
-		const [fromUserBefore]= await getKarmaValue(from);
+		const [fromUserBefore] = await getKarmaValue(from);
 		const fromKarma = fromUserBefore.karma;
 
 		if (fromKarma - diff < 0) {
@@ -182,7 +182,7 @@ const userCacheTTL = 30;
 // Объект для
 const __localCached: Record<string | number, ILocalUser> = {};
 
-const fetchUser = async (telegramUserId: number): Promise<ILocalUser> => {
+const fetchUser = async(telegramUserId: number): Promise<ILocalUser> => {
 	try {
 		const result = await query<ILocalUser>(
 			database,
@@ -202,7 +202,7 @@ const fetchUser = async (telegramUserId: number): Promise<ILocalUser> => {
  * Получение полной информации о пользователе по userId
  * @param telegramUserId
  */
-const getUserData = async (telegramUserId: number): Promise<ILocalUser> => {
+const getUserData = async(telegramUserId: number): Promise<ILocalUser> => {
 	const hasInCache = telegramUserId in __localCached;
 	const isFresh = hasInCache && getNow() - __localCached[telegramUserId].__cached < userCacheTTL;
 
@@ -222,8 +222,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 	// Кэш всех юзеров
 	fetchAllData(database);
 
-	bot.on('message', async (message: TelegramBot.Message) => {
-
+	bot.on('message', async(message: TelegramBot.Message) => {
 		// Инфа о юзере
 		const user: ILocalUser = await getUserData(message.from.id);
 
@@ -242,7 +241,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		}
 	});
 
-	bot.onText(/\/F (-?\d+)/i, async (message: TelegramBot.Message, match: string[]) => {
+	bot.onText(/\/F (-?\d+)/i, async(message: TelegramBot.Message, match: string[]) => {
 		const rpl = reply(bot, message).asReply();
 		try {
 			const fromUser = message.from;
@@ -265,7 +264,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		}
 	});
 
-	bot.onText(/\/karma/i, async (message: TelegramBot.Message) => {
+	bot.onText(/\/karma/i, async(message: TelegramBot.Message) => {
 		const replyMsg = message.reply_to_message;
 
 		if (!replyMsg) {

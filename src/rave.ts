@@ -1,8 +1,8 @@
 import http from 'http';
 import TelegramBot from 'node-telegram-bot-api';
-import reply from './reply'
-import InlineKeyboard from "./keyboards";
-import { getNow, getRandomInt } from "./utils";
+import reply from './reply';
+import InlineKeyboard from './keyboards';
+import { getNow, getRandomInt } from './utils';
 
 // Source URL
 const url = process.env.RAVE_URL;
@@ -15,7 +15,7 @@ let mRaveDb: Record<string, number>;
 /**
  * Fetch data from remote
  */
-const updateDatabase = async () => new Promise((resolve, reject) => http.get(url, (res) => {
+const updateDatabase = async() => new Promise((resolve, reject) => http.get(url, (res) => {
 	let body = '';
 
 	res.on('data', chunk => (body += chunk));
@@ -69,7 +69,6 @@ const getPhrase = () => {
 updateDatabase();
 
 export default function(bot: TelegramBot) {
-
 	/**
 	 * Default keyboard for rave messages
 	 */
@@ -82,7 +81,7 @@ export default function(bot: TelegramBot) {
 	/**
 	 * Force update database
 	 */
-	bot.onText(/\/updaterave/, async (message) => {
+	bot.onText(/\/updaterave/, async(message) => {
 		await updateDatabase();
 		reply(bot, message).text('Перезагружено').send();
 	});

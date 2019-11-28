@@ -1,26 +1,22 @@
 import * as TelegramBot from 'node-telegram-bot-api';
-import { InlineKeyboardButton } from 'node-telegram-bot-api';
 
 class InlineKeyboardRow {
-
-	private readonly buttons: InlineKeyboardButton[];
+	private readonly buttons: TelegramBot.InlineKeyboardButton[];
 
 	constructor() {
 		this.buttons = [];
 	}
 
 	addStringButton(text: string, data: string) {
-		this.buttons.push({ text, callback_data: data })
+		this.buttons.push({ text, callback_data: data });
 	}
 
-	make(): InlineKeyboardButton[] {
+	make(): TelegramBot.InlineKeyboardButton[] {
 		return this.buttons;
 	}
-
 }
 
 class InlineKeyboard {
-
 	private readonly rows: InlineKeyboardRow[];
 
 	constructor() {
@@ -33,11 +29,10 @@ class InlineKeyboard {
 		return row;
 	}
 
-
 	public make(): TelegramBot.InlineKeyboardMarkup {
 		return {
 			inline_keyboard: this.rows.map(row => row.make())
-		}
+		};
 	}
 }
 

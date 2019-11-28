@@ -9,8 +9,6 @@ import karmaInit from './karma';
 import banInit from './bans';
 import { getRandomInt } from './utils';
 
-
-
 bot.onText(/\/test/i, (msg: TelegramBot.Message) => {
 	reply(bot, msg).text('Up').asReply().send();
 });

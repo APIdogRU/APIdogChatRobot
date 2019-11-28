@@ -33,7 +33,7 @@ export default (message: TelegramBot.Message, reply: () => Reply) => {
 	const ent = message.entities[0];
 	const substr = message.text.substr(ent.offset, ent.length);
 
-	const make = async (joke: IJoke) => {
+	const make = async(joke: IJoke) => {
 		const now = getNow();
 		const user = message.from;
 		const coolDown = Sugar.Object.isFunction(joke.coolDown) ? joke.coolDown() : joke.coolDown;
@@ -54,7 +54,6 @@ export default (message: TelegramBot.Message, reply: () => Reply) => {
 
 	jokes.some(joke => {
 		if (joke.command === substr) {
-
 			make(joke);
 
 			return true;

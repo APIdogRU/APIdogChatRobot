@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import mysql from 'mysql';
 import reply, { Reply } from './reply';
-import config from './config'
+import config from './config';
 import { DAY, getNow, packAction, unpackAction } from './utils';
 import InlineKeyboard from './keyboards';
 import { parseTimeInterval, toStringDateTime } from './time';
@@ -32,18 +32,18 @@ const ACTION_VB = 'voteban';
  *     N может быть не менее 30 секунд и не более одного дня
  */
 
-
-const getVoteBanData = async (messageId: number) => {
+const getVoteBanData = async(messageId: number) => {
 	const items = await query<IVoteBanItem>(database, 'select * from `tgVoteban` where `messageId` = ?', [messageId]);
 
-	let yes = 0, no = 0;
+	let yes = 0;
+	let no = 0;
 
 	items.forEach((item: IVoteBanItem) => item.answer ? ++yes : ++no);
 
-	return {yes, no};
+	return { yes, no };
 };
 
-const addVoteBanAnswer = async (messageId: number, voterId: number, answer: VoteBanAnswer) => {
+const addVoteBanAnswer = async(messageId: number, voterId: number, answer: VoteBanAnswer) => {
 	await query<void>(
 		database,
 		'insert into `tgVoteban` (`messageId`, `voterUserId`, `answer`) VALUES (?, ?, ?)',
@@ -90,21 +90,20 @@ const summarize = (bot: TelegramBot, badMessage: TelegramBot.Message, botMessage
 
 const voterRow = (answer: VoteBanAnswer, user: TelegramBot.User) => `${answer ? '➕' : '➖'} ${user.username || user.first_name}`;
 
-
 export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 	database = argDatabase;
 
-	bot.onText(/\/voteban( ([\ddhms]+))?/, async (message: TelegramBot.Message, match: string[]) => {
+	bot.onText(/\/voteban( ([\ddhms]+))?/, async(message: TelegramBot.Message, match: string[]) => {
 		// Сообщение того, кого баним
 		const target: TelegramBot.Message = message.reply_to_message;
 
 		// Кто банит
-		//const suitor: TelegramBot.User = message.from;
+		// const suitor: TelegramBot.User = message.from;
 
 		// Ответ на сообщение, автора которого баним
 		const rpl = reply(bot, message).asReply(target.message_id);
 
-		const makeReply = async (): Promise<Reply> => {
+		const makeReply = async(): Promise<Reply> => {
 			if (!target) {
 				throw new Error('Не выбрано сообщение');
 			}
@@ -146,8 +145,8 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		}
 	});
 
-	bot.on('callback_query', async (query: TelegramBot.CallbackQuery) => {
-		const {action, args} = unpackAction(query.data);
+	bot.on('callback_query', async(query: TelegramBot.CallbackQuery) => {
+		const { action, args } = unpackAction(query.data);
 
 		if (action !== ACTION_VB) {
 			return;
@@ -195,7 +194,6 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 			});
 		} catch (e) {
 			if (~e.message.indexOf('ER_DUP_ENTRY')) {
-
 				// noinspection ES6MissingAwait
 				bot.answerCallbackQuery(query.id, { text: 'Голос уже учтён.' });
 
@@ -207,7 +205,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 			}
 
 			reply(bot, messageVote).text(`❌ Ошибка:\n<pre>${e.message}</pre>`).asReply().send();
-			console.error(`Error while add vote`, e);
+			console.error('Error while add vote', e);
 		}
 	});
-}
+};

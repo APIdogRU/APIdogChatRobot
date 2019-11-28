@@ -59,7 +59,7 @@ export class Reply {
 	}
 
 	private __getProps(): TelegramBot.SendMessageOptions {
-		let props: TelegramBot.SendMessageOptions = this.options;
+		const props: TelegramBot.SendMessageOptions = this.options;
 
 		if (props.reply_markup === undefined) {
 			delete props.reply_markup;
@@ -72,7 +72,7 @@ export class Reply {
 		return props;
 	}
 
-	send = async () => this.bot.sendMessage(this.parent.chat.id, this._text, this.__getProps())
+	send = async() => this.bot.sendMessage(this.parent.chat.id, this._text, this.__getProps())
 }
 
 const reply = (bot: TelegramBot, message: TelegramBot.Message): Reply => new Reply(bot, message);
