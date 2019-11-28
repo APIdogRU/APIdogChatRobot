@@ -8,6 +8,7 @@
 		"lint": "npx eslint --ext .ts src"
 	},
 	"dependencies": {
+		"canvas": "2.6.0",
 		"dotenv": "8.1.0",
 		"mysql": "2.17.1",
 		"node-telegram-bot-api": "0.30.0",

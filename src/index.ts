@@ -7,10 +7,15 @@ import TelegramBot from 'node-telegram-bot-api';
 import raveInit from './rave';
 import karmaInit from './karma';
 import banInit from './bans';
+import registerScreenshoter from './screenshot';
 import { getRandomInt } from './utils';
 
 bot.onText(/\/test/i, (msg: TelegramBot.Message) => {
 	reply(bot, msg).text('Up').asReply().send();
+});
+
+bot.onText(/\/ping/i, (msg: TelegramBot.Message) => {
+	reply(bot, msg).text('пинга для пидорасов и ебанов').asReply().send();
 });
 
 bot.onText(/\/roll/i, (msg: TelegramBot.Message) => {
@@ -20,6 +25,7 @@ bot.onText(/\/roll/i, (msg: TelegramBot.Message) => {
 raveInit(bot);
 karmaInit(bot, db);
 banInit(bot, db);
+registerScreenshoter(bot);
 
 process.addListener('beforeExit', () => {
 	bot.sendMessage(config.targetChatId, 'process killed');
