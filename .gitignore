@@ -1,5 +1,5 @@
 dist/
-src/config.ts
+src/config.production.ts
 # Logs
 logs
 *.log

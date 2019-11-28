@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"start": "npm run build && node ./dist/index",
-		"build": "tsc",
+		"build": "npx tsc",
 		"lint": "npx eslint --ext .ts src"
 	},
 	"dependencies": {
