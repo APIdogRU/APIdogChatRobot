@@ -97,6 +97,10 @@ const names: Record<string, string> = {
 };
 
 export default async(checkBundle: ICheckMessage, reply: () => Reply) => {
+	if (checkBundle.message.forward_from) {
+		return;
+	}
+
 	Object.keys(rules).some(key => {
 		const test: IPunishment | null = rules[key](checkBundle);
 
