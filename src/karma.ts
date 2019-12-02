@@ -222,7 +222,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 	// Кэш всех юзеров
 	fetchAllData(database);
 
-	bot.on('message', async(message: TelegramBot.Message) => {
+	const listener = async(message: TelegramBot.Message) => {
 		// Инфа о юзере
 		const user: ILocalUser = await getUserData(message.from.id);
 
@@ -239,7 +239,10 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		if (isCommand) {
 			handleJoke(message, sender);
 		}
-	});
+	};
+
+	bot.on('message', listener);
+	bot.on('edited_message', listener);
 
 	bot.onText(/\/F (-?\d+)/i, async(message: TelegramBot.Message, match: string[]) => {
 		const rpl = reply(bot, message).asReply();
