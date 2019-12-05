@@ -155,13 +155,13 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		// Кто нажал
 		const user: TelegramBot.User = query.from;
 
-		const [answer, duration] = args;
+		const [message, from, duration, answer] = args;
 
 		const messageVote = query.message; // Сообщение бота
 		const targetMessage = messageVote.reply_to_message; // Сообщение за которое бан
 
 		console.log(`User ${user.username}/${user.id} clicked button ${answer} on voteban for ${targetMessage.from && targetMessage.from.username}/${targetMessage.from && targetMessage.from.id}`);
-		console.log(messageVote.message_id, user.id, answer === '1');
+
 
 		if (user.id === targetMessage.from.id) {
 			// noinspection ES6MissingAwait
