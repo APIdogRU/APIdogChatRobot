@@ -232,9 +232,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 		// Отправлятор
 		const sender = () => reply(bot, message);
 
-		if (!message.edit_date) {
-			await handleRules(checkBundle, sender);
-		}
+		await handleRules(checkBundle, sender);
 
 		const isCommand = message.entities && message.entities.length && message.entities[0].type === 'bot_command';
 

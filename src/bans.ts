@@ -162,7 +162,6 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 
 		console.log(`User ${user.username}/${user.id} clicked button ${answer} on voteban for ${targetMessage.from && targetMessage.from.username}/${targetMessage.from && targetMessage.from.id}`);
 
-
 		if (user.id === targetMessage.from.id) {
 			// noinspection ES6MissingAwait
 			bot.answerCallbackQuery(query.id, { text: 'Тебе нельзя проголосовать в этом опросе', show_alert: true });
