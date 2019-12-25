@@ -260,7 +260,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 
 			const result = await transferKarma(diff, fromUser.id, toUser.id);
 
-			rpl.text(`✅ Успешно\n\n<b>${fromUser.username}</b>\n<code>${result.from.was} [ ${formatKarma(diff)} ] ${result.from.now}</code>\n\n<b>${toUser.username}</b>\n<code>${result.to.was} [ ${formatKarma(diff)} ] ${result.to.now}</code>`).send();
+			rpl.text(`✅ Успешно\n\n<b>${fromUser.username}</b>\n<code>${result.from.was} [ ${formatKarma(-diff)} ] ${result.from.now}</code>\n\n<b>${toUser.username}</b>\n<code>${result.to.was} [ ${formatKarma(diff)} ] ${result.to.now}</code>`).send();
 		} catch (e) {
 			rpl.text(`❌ Ошибка!\n\n${e.message}`).send();
 			console.error(e);
