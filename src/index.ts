@@ -7,6 +7,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import raveInit from './rave';
 import karmaInit from './karma';
 import banInit from './bans';
+import usersInit from './users';
 import registerScreenshoter from './screenshot';
 import { getRandomInt } from './utils';
 
@@ -26,6 +27,7 @@ raveInit(bot);
 karmaInit(bot, db);
 banInit(bot, db);
 registerScreenshoter(bot);
+usersInit(bot, db);
 
 process.addListener('beforeExit', () => {
 	bot.sendMessage(config.targetChatId, 'process killed');
