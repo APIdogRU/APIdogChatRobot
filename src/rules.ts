@@ -101,7 +101,16 @@ export default async(checkBundle: ICheckMessage, reply: () => Reply) => {
 		return;
 	}
 
-	Object.keys(rules).some(key => {
+	const checks = Object.keys(rules);
+
+	if (checkBundle.message) {
+		const index = checks.indexOf('check-flood');
+		if (index >= 0) {
+			checks.splice(index, 1);
+		}
+	}
+
+	checks.some(key => {
 		const test: IPunishment | null = rules[key](checkBundle);
 
 		if (test) {
