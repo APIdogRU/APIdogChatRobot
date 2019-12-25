@@ -262,7 +262,7 @@ export default (bot: TelegramBot) => {
 			return;
 		}
 
-		if (replyMessage.from.id === config.admins[0]) {
+		if (String(replyMessage.from.id) === String(process.env.ADMIN_ID)) {
 			message.reply_to_message = null;
 			replyMessage = message;
 		}
