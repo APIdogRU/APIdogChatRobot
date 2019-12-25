@@ -1,7 +1,7 @@
 import { AnimatedSticker, ICheckMessage, IPunishment, IRule } from './interfaces';
 import checkFlood from './flood';
 import config from './config';
-import { formatKarma, getNow, MINUTE } from './utils';
+import { formatKarma, getNow, HOUR, MINUTE } from './utils';
 import { Reply } from './reply';
 import { makeKarmaTransaction } from './karma';
 import { toStringDateTime } from './time';
@@ -79,6 +79,20 @@ const rules: Record<string, IRule> = {
 		}
 
 		return null;
+	},
+
+	'trigger-vertical-video': m => {
+		const video = m.message.video;
+
+		if (video && video.height > video.width) {
+			return {
+				banDuration: 24 * HOUR,
+				deltaKarma: -1280,
+				isStrict: true
+			};
+		}
+
+		return null;
 	}
 };
 
@@ -93,7 +107,8 @@ const names: Record<string, string> = {
 	'trigger-anime': 'Аниме',
 	'trigger-stickerpack-bad': 'Стикерпак',
 	'trigger-sticker-bad': 'Стикер',
-	'trigger-sticker-animated': 'Анимированный стикер'
+	'trigger-sticker-animated': 'Анимированный стикер',
+	'trigger-vertical-video': 'Вертикальное видео'
 };
 
 export default async(checkBundle: ICheckMessage, reply: () => Reply) => {
