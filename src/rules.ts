@@ -1,7 +1,7 @@
 import { AnimatedSticker, ICheckMessage, IPunishment, IRule } from './interfaces';
 import checkFlood from './flood';
 import config from './config';
-import { formatKarma, MINUTE } from './utils';
+import { formatKarma, getNow, MINUTE } from './utils';
 import { Reply } from './reply';
 import { makeKarmaTransaction } from './karma';
 import { toStringDateTime } from './time';
@@ -97,13 +97,15 @@ const names: Record<string, string> = {
 };
 
 export default async(checkBundle: ICheckMessage, reply: () => Reply) => {
-	if (checkBundle.message.forward_from) {
+	const { message, bot } = checkBundle;
+
+	if (message.forward_from) {
 		return;
 	}
 
 	const checks = Object.keys(rules);
 
-	if (checkBundle.message) {
+	if (message) {
 		const index = checks.indexOf('check-flood');
 		if (index >= 0) {
 			checks.splice(index, 1);
@@ -117,10 +119,7 @@ export default async(checkBundle: ICheckMessage, reply: () => Reply) => {
 			process.stdout.write(`triggered by check [${key}] ${test}\n`);
 
 			(async() => {
-				const { message } = checkBundle;
-				const { from } = message;
-
-				// const karma = checkBundle.user.karma;
+				const { chat, from } = message;
 
 				const needBlock = test.isStrict;
 
@@ -135,10 +134,16 @@ export default async(checkBundle: ICheckMessage, reply: () => Reply) => {
 
 				if (needBlock) {
 					replyMessage.push(`\n🚫 Блок: на ${toStringDateTime(test.banDuration)}`);
+
+					// noinspection ES6MissingAwait
+					bot.restrictChatMember(chat.id, String(from.id), {
+						can_send_messages: false,
+						until_date: getNow() + test.banDuration
+					});
 				}
 
 				if (test.action && Sugar.Object.isFunction(test.action)) {
-					test.action(checkBundle.bot);
+					test.action(bot);
 				}
 
 				reply().text(replyMessage.join(' ')).send();
