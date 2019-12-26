@@ -95,10 +95,16 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 
 	bot.onText(/\/voteban( ([\ddhms]+))?/, async(message: TelegramBot.Message, match: string[]) => {
 		// Сообщение того, кого баним
-		const target: TelegramBot.Message = message.reply_to_message;
+		let target: TelegramBot.Message = message.reply_to_message;
 
 		// Кто банит
 		// const suitor: TelegramBot.User = message.from;
+
+		// Баним адмена
+		if (String(target.from.id) === String(process.env.ADMIN_ID)) {
+			// Не баним адмена
+			target = message;
+		}
 
 		// Ответ на сообщение, автора которого баним
 		const rpl = reply(bot, message).asReply(target.message_id);
