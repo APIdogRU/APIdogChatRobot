@@ -118,7 +118,7 @@ export default (bot: TelegramBot, argDatabase: mysql.Connection) => {
 			const enemy: TelegramBot.User = target.from;
 
 			// Мазохист
-			if (enemy.id === message.from.id) {
+			if (enemy.id === message.from.id && message !== target) {
 				throw new Error('Самого себя забанить? Мощно.');
 			}
 
