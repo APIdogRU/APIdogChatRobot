@@ -84,7 +84,7 @@ const rules: Record<string, IRule> = {
 	'trigger-vertical-video': m => {
 		const video = m.message.video;
 
-		if (video && video.height > video.width) {
+		if (video && video.height > video.width && !m.message.forward_from) {
 			return {
 				banDuration: 24 * HOUR,
 				deltaKarma: -1280,
