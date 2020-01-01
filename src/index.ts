@@ -10,6 +10,7 @@ import banInit from './bans';
 import usersInit from './users';
 import registerScreenshoter from './screenshot';
 import { getRandomInt } from './utils';
+import initGameVote from './games';
 
 bot.onText(/\/test/i, (msg: TelegramBot.Message) => {
 	reply(bot, msg).text('Up').asReply().send();
@@ -28,6 +29,7 @@ karmaInit(bot, db);
 banInit(bot, db);
 registerScreenshoter(bot);
 usersInit(bot, db);
+initGameVote(bot);
 
 process.addListener('beforeExit', () => {
 	bot.sendMessage(config.targetChatId, 'process killed');
