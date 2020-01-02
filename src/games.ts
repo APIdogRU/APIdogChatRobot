@@ -111,6 +111,10 @@ export default async function initGameVote(bot: TelegramBot) {
 
 		const { game, keys, accept, decline, answer } = unpack(data);
 
+		if (!([KB_KEY_CS, KB_KEY_PL].includes(game))) {
+			return;
+		}
+
 		if (!key || !keys.includes(key)) {
 			bot.answerCallbackQuery(id, {
 				cache_time: 1800,
