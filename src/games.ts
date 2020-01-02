@@ -2,7 +2,15 @@ import TelegramBot from 'node-telegram-bot-api';
 import InlineKeyboard from './keyboards';
 import reply from './reply';
 
-const ids: Record<string, number> = {
+/**
+ * Ключи юзеров
+ */
+type TUserKey = 'v' | 't' | 'd' | 'c' | 'k';
+
+/**
+ * Ключи юзеров и иды
+ */
+const ids: Record<TUserKey, number> = {
 	v: 63923,
 	t: 97781725,
 	d: 87476169,
@@ -10,7 +18,10 @@ const ids: Record<string, number> = {
 	k: 257534697
 };
 
-const names: Record<string, string> = {
+/**
+ * Ключи юзеров и юзернеймы
+ */
+const names: Record<TUserKey, string> = {
 	v: 'vladislav805',
 	t: 'Whoops',
 	d: 'leodicapri',
@@ -18,7 +29,10 @@ const names: Record<string, string> = {
 	k: 'soslowman'
 };
 
+// Игры
 type TGame = 'game_cs' | 'game_pl';
+
+// Ответ
 type TAnswer = 'y' | 'n';
 
 const KB_KEY_CS: TGame = 'game_cs';
@@ -29,23 +43,45 @@ const KB_KEY_PL: TGame = 'game_pl';
  * 1 keys_all
  * 2 keys_accept
  * 3 keys_decline
+ * 4 answer y/n
+ */
+
+/**
+ * Запаковка данных для кнопок
+ * @param game Игра
+ * @param keys Ожидаемые игроки
+ * @param accept Согласившиеся игроки
+ * @param decline Отказавшиеся игроки
+ * @param answer Ответ
  */
 const pack = (game: TGame, keys: string[], accept: string[], decline: string[], answer: TAnswer) => {
 	return [game, keys.join(''), accept.join(''), decline.join(''), answer].join('/');
 };
 
-const unpack = (str: string): { game: TGame, keys: string[], accept: string[], decline: string[], answer: TAnswer } => {
+/**
+ * Распаковка данных кнопки
+ * @param str Строка data
+ */
+const unpack = (str: string): { game: TGame, keys: TUserKey[], accept: TUserKey[], decline: TUserKey[], answer: TAnswer } => {
 	const [game, keys, accept, decline, answer] = str.split('/');
 	return {
 		game: game as TGame,
-		keys: keys.split(''),
-		accept: accept.split(''),
-		decline: decline.split(''),
+		keys: keys.split('') as TUserKey[],
+		accept: accept.split('') as TUserKey[],
+		decline: decline.split('') as TUserKey[],
 		answer: answer as TAnswer
 	};
 };
 
-const getMessageText = (game: TGame, keys: string[], accept: string[], decline: string[]) => {
+/**
+ * Создание строки для сообщения
+ * @param game Игра
+ * @param keys Ожидаемые игроки
+ * @param accept Согласившиеся игроки
+ * @param decline Отказавшиеся игроки
+ * @returns Строка для сообщения
+ */
+const getMessageText = (game: TGame, keys: TUserKey[], accept: TUserKey[], decline: TUserKey[]) => {
 	const blocks = [];
 	if (keys.length) {
 		blocks.push(`**Wait for**\n${getUserList(keys)}`);
@@ -62,10 +98,19 @@ const getMessageText = (game: TGame, keys: string[], accept: string[], decline: 
 	return `**Ping for ${game.replace('game_', '').toUpperCase()}**\n` + blocks.join('\n\n');
 };
 
-const getUserList = (keys: string[], joiner = '\n') => keys.map(key => `@${names[key]}`).join(joiner);
+/**
+ * Получение форматированной строки с юзернеймами пользователей
+ * @param keys Ключи игроков
+ * @param joiner Строка-соеденитель
+ */
+const getUserList = (keys: TUserKey[], joiner = '\n') => keys.map(key => `@${names[key]}`).join(joiner);
 
-const getKeyById = (id: number) => {
-	const arr = Object.keys(ids);
+/**
+ * Получение ключа игрока по его ид
+ * @param id Ид юзера в Telegram
+ */
+const getKeyById = (id: number): TUserKey | null => {
+	const arr = Object.keys(ids) as TUserKey[];
 
 	for (let i = 0; i < arr.length; ++i) {
 		if (ids[arr[i]] === id) {
@@ -76,6 +121,13 @@ const getKeyById = (id: number) => {
 	return null;
 };
 
+/**
+ * Создание клавиатуры для сообщения
+ * @param game Игра
+ * @param keys Ожидаемые игроки
+ * @param accept Согласившиеся игроки
+ * @param decline Отказавшиеся игроки
+ */
 const getKeyboard = (game: TGame, keys: string[], accept: string[], decline: string[]) => {
 	const kb: InlineKeyboard = new InlineKeyboard();
 	const kbRow = kb.addRow();
@@ -84,17 +136,21 @@ const getKeyboard = (game: TGame, keys: string[], accept: string[], decline: str
 	return kb.make();
 };
 
+/**
+ * Инициализация игрового модуля
+ * @param bot Telegram-бот
+ */
 export default async function initGameVote(bot: TelegramBot) {
 	const createListener = (game: TGame) => {
 		return (message: TelegramBot.Message, match: string[]) => {
 			const keys = match[2]?.split('');
 
 			if (!keys || !keys.length) {
-				reply(bot, message).text(`Не указаны тиммейты. Доступные ключи: ${Object.keys(ids).join(', ')}`).send();
+				reply(bot, message).text(`Не указаны тиммейты. Доступные ключи: \`${Object.keys(ids).join('`, `')}\``).send();
 				return;
 			}
 
-			bot.sendMessage(message.chat.id, getMessageText(game, keys, [], []), {
+			bot.sendMessage(message.chat.id, getMessageText(game, keys as TUserKey[], [], []), {
 				disable_notification: false,
 				parse_mode: 'Markdown',
 				reply_to_message_id: message.message_id,
@@ -130,7 +186,7 @@ export default async function initGameVote(bot: TelegramBot) {
 			default: return;
 		}
 
-		keys.splice(keys.indexOf('key'), 1);
+		keys.splice(keys.indexOf(key), 1);
 
 		const text = getMessageText(game, keys, accept, decline);
 
