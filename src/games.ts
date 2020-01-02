@@ -92,7 +92,7 @@ const getMessageText = (game: TGame, keys: TUserKey[], accept: TUserKey[], decli
 	}
 
 	if (decline.length) {
-		blocks.push(`Y: ${getUserList(decline, ', ')}`);
+		blocks.push(`N: ${getUserList(decline, ', ')}`);
 	}
 
 	return `**Ping for ${game.replace('game_', '').toUpperCase()}**\n` + blocks.join('\n\n');
