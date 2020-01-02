@@ -155,6 +155,13 @@ const getKeyboard = (game: TGame, keys: TUserVote, accept: TUserVote, decline: T
 export default async function initGameVote(bot: TelegramBot) {
 	const createListener = (game: TGame) => {
 		return (message: TelegramBot.Message, match: string[]) => {
+			const key = getKeyById(message.from.id);
+
+			if (!key) {
+				reply(bot, message).text('Ты не киберкотлета.').send();
+				return;
+			}
+
 			const keysStr = match[2];
 
 			if (!keysStr || !keysStr.length) {
