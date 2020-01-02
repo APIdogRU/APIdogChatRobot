@@ -38,6 +38,8 @@ type TAnswer = 'y' | 'n';
 const KB_KEY_CS: TGame = 'game_cs';
 const KB_KEY_PL: TGame = 'game_pl';
 
+type TUserVote = Partial<Record<TUserKey, boolean>>;
+
 /*
  * 0 game
  * 1 keys_all
@@ -45,6 +47,15 @@ const KB_KEY_PL: TGame = 'game_pl';
  * 3 keys_decline
  * 4 answer y/n
  */
+
+const toString = (list: TUserVote) => Object.keys(list).join('');
+
+const toObject = (str: string): TUserVote => str.split('').reduce((prev, curr) => {
+	prev[curr as TUserKey] = true;
+	return prev;
+}, {} as TUserVote);
+
+const isEmpty = (list: TUserVote) => Object.keys(list).length === 0;
 
 /**
  * Запаковка данных для кнопок
@@ -54,21 +65,21 @@ const KB_KEY_PL: TGame = 'game_pl';
  * @param decline Отказавшиеся игроки
  * @param answer Ответ
  */
-const pack = (game: TGame, keys: string[], accept: string[], decline: string[], answer: TAnswer) => {
-	return [game, keys.join(''), accept.join(''), decline.join(''), answer].join('/');
+const pack = (game: TGame, keys: TUserVote, accept: TUserVote, decline: TUserVote, answer: TAnswer) => {
+	return [game, toString(keys), toString(accept), toString(decline), answer].join('/');
 };
 
 /**
  * Распаковка данных кнопки
  * @param str Строка data
  */
-const unpack = (str: string): { game: TGame, keys: TUserKey[], accept: TUserKey[], decline: TUserKey[], answer: TAnswer } => {
+const unpack = (str: string): { game: TGame, keys: TUserVote, accept: TUserVote, decline: TUserVote, answer: TAnswer } => {
 	const [game, keys, accept, decline, answer] = str.split('/');
 	return {
 		game: game as TGame,
-		keys: keys.split('') as TUserKey[],
-		accept: accept.split('') as TUserKey[],
-		decline: decline.split('') as TUserKey[],
+		keys: toObject(keys),
+		accept: toObject(accept),
+		decline: toObject(decline),
 		answer: answer as TAnswer
 	};
 };
@@ -81,17 +92,18 @@ const unpack = (str: string): { game: TGame, keys: TUserKey[], accept: TUserKey[
  * @param decline Отказавшиеся игроки
  * @returns Строка для сообщения
  */
-const getMessageText = (game: TGame, keys: TUserKey[], accept: TUserKey[], decline: TUserKey[]) => {
+const getMessageText = (game: TGame, keys: TUserVote, accept: TUserVote, decline: TUserVote) => {
 	const blocks = [];
-	if (keys.length) {
+
+	if (!isEmpty(keys)) {
 		blocks.push(`**Wait for**\n${getUserList(keys)}`);
 	}
 
-	if (accept.length) {
+	if (!isEmpty(accept)) {
 		blocks.push(`Y: ${getUserList(accept, ', ')}`);
 	}
 
-	if (decline.length) {
+	if (!isEmpty(decline)) {
 		blocks.push(`N: ${getUserList(decline, ', ')}`);
 	}
 
@@ -103,7 +115,7 @@ const getMessageText = (game: TGame, keys: TUserKey[], accept: TUserKey[], decli
  * @param keys Ключи игроков
  * @param joiner Строка-соеденитель
  */
-const getUserList = (keys: TUserKey[], joiner = '\n') => keys.map(key => `@${names[key]}`).join(joiner);
+const getUserList = (keys: TUserVote, joiner = '\n') => Object.keys(keys).map(key => `@${names[key as TUserKey]}`).join(joiner);
 
 /**
  * Получение ключа игрока по его ид
@@ -128,7 +140,7 @@ const getKeyById = (id: number): TUserKey | null => {
  * @param accept Согласившиеся игроки
  * @param decline Отказавшиеся игроки
  */
-const getKeyboard = (game: TGame, keys: string[], accept: string[], decline: string[]) => {
+const getKeyboard = (game: TGame, keys: TUserVote, accept: TUserVote, decline: TUserVote) => {
 	const kb: InlineKeyboard = new InlineKeyboard();
 	const kbRow = kb.addRow();
 	kbRow.addStringButton('Y', pack(game, keys, accept, decline, 'y'));
@@ -143,18 +155,20 @@ const getKeyboard = (game: TGame, keys: string[], accept: string[], decline: str
 export default async function initGameVote(bot: TelegramBot) {
 	const createListener = (game: TGame) => {
 		return (message: TelegramBot.Message, match: string[]) => {
-			const keys = match[2]?.split('');
+			const keysStr = match[2];
 
-			if (!keys || !keys.length) {
+			if (!keysStr || !keysStr.length) {
 				reply(bot, message).text(`Не указаны тиммейты. Доступные ключи: \`${Object.keys(ids).join('`, `')}\``).send();
 				return;
 			}
 
-			bot.sendMessage(message.chat.id, getMessageText(game, keys as TUserKey[], [], []), {
+			const keys = toObject(keysStr);
+
+			bot.sendMessage(message.chat.id, getMessageText(game, keys, {}, {}), {
 				disable_notification: false,
 				parse_mode: 'Markdown',
 				reply_to_message_id: message.message_id,
-				reply_markup: getKeyboard(game, keys, [], [])
+				reply_markup: getKeyboard(game, keys, {}, {})
 			});
 		};
 	};
@@ -171,7 +185,7 @@ export default async function initGameVote(bot: TelegramBot) {
 			return;
 		}
 
-		if (!key || !keys.includes(key)) {
+		if (!key || !(key in keys)) {
 			bot.answerCallbackQuery(id, {
 				cache_time: 1800,
 				show_alert: true,
@@ -181,12 +195,12 @@ export default async function initGameVote(bot: TelegramBot) {
 		}
 
 		switch (answer) {
-			case 'y': accept.push(key); break;
-			case 'n': decline.push(key); break;
+			case 'y': accept[key] = true; break;
+			case 'n': decline[key] = true; break;
 			default: return;
 		}
 
-		keys.splice(keys.indexOf(key), 1);
+		delete keys[key];
 
 		const text = getMessageText(game, keys, accept, decline);
 
