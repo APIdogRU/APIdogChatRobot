@@ -2,6 +2,8 @@
  * Утилиты *
  ***********/
 
+import * as http from 'http';
+
 /**
  * Текущее время в unixtime (seconds)
  */
@@ -42,3 +44,27 @@ export const unpackAction = (packed: string) => {
  * @param value Карма
  */
 export const formatKarma = (value: number) => (value > 0 ? '+' : '-') + Math.abs(value);
+
+export const getRedditPreviewImage = (url: string) => new Promise<string>((resolve, reject) => {
+	require('https').get(url, (res: http.IncomingMessage) => {
+		let data = '';
+		res.on('data', chunk => {
+			data += chunk;
+		});
+
+		res.on('end', () => {
+			const res = /<meta property="og:image" content="([^"]+)"\/>/ig.exec(data);
+
+			const image = res[1]?.replace(/&amp;/ig, '&');
+
+			if (!image) {
+				reject(new Error('Нет пикчи'));
+				return;
+			}
+
+			resolve(image);
+		});
+	}).on('error', (e: Error) => {
+		reject(e);
+	});
+});
