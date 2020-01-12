@@ -20,7 +20,7 @@ bot.onText(/\/ping/i, (msg: TelegramBot.Message) => {
 });
 
 bot.onText(/\/roll/i, (msg: TelegramBot.Message) => {
-	reply(bot, msg).text(['ОРЁЛ', 'РЕШКА'][getRandomInt(1)]).send();
+	reply(bot, msg).text(['ОРЁЛ', 'РЕШКА'][getRandomInt(1)]).deleteAfter(2000).deleteParentAlso().send();
 });
 
 bot.onText(/(https?:\/\/((www\.)?reddit\.com|redd\.it)\/[^\s]+)/igm, (msg: TelegramBot.Message, matches: string[]) => {

@@ -1,5 +1,5 @@
 import * as TelegramBot from 'node-telegram-bot-api';
-import { DAY, formatKarma, getNow, getRandomInt, HOUR } from './utils';
+import { DAY, formatKarma, getNow, getRandomInt, HOUR, MINUTE } from './utils';
 import { Reply } from './reply';
 import { IReasonJoke } from './interfaces';
 import { makeKarmaTransaction } from './karma';
@@ -39,7 +39,7 @@ export default (message: TelegramBot.Message, reply: () => Reply) => {
 		const key = user.id + '_' + joke.command.substring(1);
 
 		if (coolDownInfo[key] + coolDown > now) {
-			reply().text(`Рано. Осталось ${toStringDateTime(coolDownInfo[user.id] + coolDown - now)}`).asReply().send();
+			reply().text(`Рано. Осталось ${toStringDateTime(coolDownInfo[user.id] + coolDown - now)}`).deleteAfter(.5 * MINUTE * 1000).deleteParentAlso().asReply().send();
 			return;
 		}
 
@@ -48,7 +48,7 @@ export default (message: TelegramBot.Message, reply: () => Reply) => {
 		const delta = Sugar.Object.isFunction(joke.delta) ? joke.delta() : joke.delta;
 		const [{ karma: karmaNew }] = await makeKarmaTransaction(message.from.id, delta);
 
-		reply().text(`<b>👤 ${user.username || user.first_name}</b>\n🔺 Карма: <code>${formatKarma(delta)}</code> -> <code>${karmaNew}</code>\n▫️ Кулдаун: ${toStringDateTime(coolDown)}`).asReply().send();
+		reply().text(`<b>👤 ${user.username || user.first_name}</b>\n🔺 Карма: <code>${formatKarma(delta)}</code> -> <code>${karmaNew}</code>\n▫️ Кулдаун: ${toStringDateTime(coolDown)}`).asReply().deleteAfter(MINUTE * 1000).deleteParentAlso().send();
 	};
 
 	jokes.some(joke => {

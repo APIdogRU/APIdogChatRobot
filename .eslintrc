@@ -98,7 +98,7 @@
 		"no-extra-boolean-cast": "error",
 		"no-extra-parens": ["error", "functions"],
 		"no-fallthrough": "error",
-		"no-floating-decimal": "error",
+		"no-floating-decimal": "off",
 		"no-func-assign": "error",
 		"no-global-assign": "error",
 		"no-implied-eval": "error",

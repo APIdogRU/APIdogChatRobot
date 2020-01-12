@@ -83,7 +83,7 @@ export default function(bot: TelegramBot) {
 	 */
 	bot.onText(/\/updaterave/, async(message) => {
 		await updateDatabase();
-		reply(bot, message).text('Перезагружено').send();
+		reply(bot, message).text('Перезагружено').deleteAfter(5000).deleteParentAlso().send();
 	});
 
 	/**
