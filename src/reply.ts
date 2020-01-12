@@ -90,7 +90,7 @@ export class Reply {
 	send = async() => {
 		const message = await this.bot.sendMessage(this.parent.chat.id, this._text, this.__getProps());
 
-		if (this._deleteAfter) {
+		if (this._deleteAfter > 0) {
 			setTimeout(() => {
 				if (this._deleteParentAlso) {
 					this.bot.deleteMessage(this.parent.chat.id, String(this.parent.message_id));
